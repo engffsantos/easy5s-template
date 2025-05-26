@@ -1,11 +1,11 @@
 import React, { useMemo } from 'react';
-import { ArrowUp, ArrowDown, Calendar, Clipboard, ListChecks, Users } from 'lucide-react';
+import { ArrowUp, ArrowDown, Calendar, Clipboard, ListChecks, Users, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import Card from '../components/common/Card';
 import PillarChart from '../components/charts/PillarChart';
 import EnvironmentScoreChart from '../components/charts/EnvironmentScoreChart';
 import Button from '../components/common/Button';
 import { useAuth } from '../contexts/AuthContext';
-import { mockEvaluations, mockEnvironments, getAveragePillarScores } from '../data/mockData';
+import { mockEvaluations, mockEnvironments, getAveragePillarScores, mockCorrectiveActions } from '../data/mockData';
 import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
@@ -43,6 +43,14 @@ const Dashboard: React.FC = () => {
     )[0];
     
     const pillarScores = latestEvaluation ? getAveragePillarScores(latestEvaluation) : [];
+
+    // Calculate corrective actions stats
+    const totalActions = mockCorrectiveActions.length;
+    const pendingActions = mockCorrectiveActions.filter(action => action.status === 'pending').length;
+    const completedActions = mockCorrectiveActions.filter(action => action.status === 'completed').length;
+    const overdueActions = mockCorrectiveActions.filter(action => 
+      action.status !== 'completed' && new Date(action.deadlineDate) < new Date()
+    ).length;
     
     return {
       totalEnvironments: mockEnvironments.length,
@@ -54,6 +62,13 @@ const Dashboard: React.FC = () => {
       latestEnvironment: latestEvaluation 
         ? mockEnvironments.find(env => env.id === latestEvaluation.environmentId)?.name 
         : null,
+      correctiveActions: {
+        total: totalActions,
+        pending: pendingActions,
+        completed: completedActions,
+        overdue: overdueActions,
+        completionRate: totalActions ? (completedActions / totalActions) * 100 : 0,
+      },
     };
   }, []);
 
@@ -133,6 +148,60 @@ const Dashboard: React.FC = () => {
             <span className="text-3xl font-bold">{stats.totalEnvironments}</span>
           </div>
         </Card>
+      </div>
+
+      {/* New section for corrective actions */}
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold mb-4">Ações Corretivas</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-primary-100 rounded-full">
+                <ListChecks className="h-6 w-6 text-primary-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Total de Ações</div>
+                <div className="text-2xl font-bold">{stats.correctiveActions.total}</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-yellow-100 rounded-full">
+                <Clock className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Pendentes</div>
+                <div className="text-2xl font-bold">{stats.correctiveActions.pending}</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-green-100 rounded-full">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Concluídas</div>
+                <div className="text-2xl font-bold">{stats.correctiveActions.completed}</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-red-100 rounded-full">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">Atrasadas</div>
+                <div className="text-2xl font-bold">{stats.correctiveActions.overdue}</div>
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
