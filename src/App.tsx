@@ -12,6 +12,7 @@ import EvaluationForm from './pages/EvaluationForm';
 import Calendar from './pages/Calendar';
 import Employees from './pages/Employees';
 import CorrectiveActions from './pages/CorrectiveActions';
+import Profile from './pages/Profile';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles?: string[] }> = ({ 
@@ -102,6 +103,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CorrectiveActions />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               } 
             />
