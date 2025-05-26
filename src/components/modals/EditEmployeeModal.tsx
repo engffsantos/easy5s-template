@@ -11,6 +11,8 @@ interface EditEmployeeModalProps {
     fullName: string;
     email: string;
     role: UserRole;
+    password?: string;
+    confirmPassword?: string;
   }) => void;
   employee?: Employee;
 }
@@ -25,18 +27,55 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
     fullName: employee?.fullName || '',
     email: employee?.email || '',
     role: employee?.role || 'responsible' as UserRole,
+    password: '',
+    confirmPassword: '',
   });
+
+  const [errors, setErrors] = useState<{
+    password?: string;
+    confirmPassword?: string;
+  }>({});
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+
+    // Only validate passwords for new employees
+    if (!employee) {
+      if (!formData.password) {
+        newErrors.password = 'A senha é obrigatória';
+      } else if (formData.password.length < 6) {
+        newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
+      }
+
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = 'Confirme a senha';
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'As senhas não coincidem';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     onSubmit({
       id: employee?.id,
       ...formData,
     });
+
     setFormData({
       fullName: '',
       email: '',
       role: 'responsible',
+      password: '',
+      confirmPassword: '',
     });
   };
 
@@ -108,6 +147,44 @@ const EditEmployeeModal: React.FC<EditEmployeeModalProps> = ({
                     <option value="student">Aluno</option>
                   </select>
                 </div>
+
+                {!employee && (
+                  <>
+                    <div>
+                      <label htmlFor="password" className="form-label">
+                        Senha
+                      </label>
+                      <input
+                        type="password"
+                        id="password"
+                        className="form-input"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required
+                      />
+                      {errors.password && (
+                        <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="confirmPassword" className="form-label">
+                        Confirmar Senha
+                      </label>
+                      <input
+                        type="password"
+                        id="confirmPassword"
+                        className="form-input"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        required
+                      />
+                      {errors.confirmPassword && (
+                        <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="mt-6 flex justify-end space-x-3">

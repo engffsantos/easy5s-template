@@ -1,3 +1,5 @@
+import React from 'react';
+
 export type UserRole = 'manager' | 'inspector' | 'student' | 'responsible';
 
 export interface User {
@@ -74,6 +76,14 @@ export interface Employee {
   email: string;
   role: UserRole;
   createdAt: string;
+}
+
+export interface NewEmployeeData {
+  fullName: string;
+  email: string;
+  role: UserRole;
+  password: string;
+  confirmPassword: string;
 }
 
 export interface EnvironmentEmployee {
