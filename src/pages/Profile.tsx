@@ -15,9 +15,42 @@ const Profile: React.FC = () => {
     confirmPassword: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
+
+  const validateForm = () => {
+    const newErrors: typeof errors = {};
+
+    if (isEditing) {
+      if (formData.newPassword || formData.confirmPassword) {
+        if (!formData.currentPassword) {
+          newErrors.currentPassword = 'A senha atual é obrigatória';
+        }
+
+        if (formData.newPassword && formData.newPassword.length < 6) {
+          newErrors.newPassword = 'A nova senha deve ter pelo menos 6 caracteres';
+        }
+
+        if (formData.newPassword !== formData.confirmPassword) {
+          newErrors.confirmPassword = 'As senhas não coincidem';
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -25,6 +58,14 @@ const Profile: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       console.log('Updating profile:', formData);
       setIsEditing(false);
+      
+      // Reset password fields
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      }));
     } catch (error) {
       console.error('Error updating profile:', error);
     } finally {
@@ -71,7 +112,18 @@ const Profile: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setIsEditing(!isEditing)}
+              onClick={() => {
+                if (isEditing) {
+                  setFormData(prev => ({
+                    ...prev,
+                    currentPassword: '',
+                    newPassword: '',
+                    confirmPassword: '',
+                  }));
+                  setErrors({});
+                }
+                setIsEditing(!isEditing);
+              }}
             >
               {isEditing ? 'Cancelar' : 'Editar'}
             </Button>
@@ -129,10 +181,13 @@ const Profile: React.FC = () => {
                       <input
                         type="password"
                         id="currentPassword"
-                        className="form-input"
+                        className={`form-input ${errors.currentPassword ? 'border-red-500' : ''}`}
                         value={formData.currentPassword}
                         onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
                       />
+                      {errors.currentPassword && (
+                        <p className="mt-1 text-sm text-red-600">{errors.currentPassword}</p>
+                      )}
                     </div>
 
                     <div>
@@ -142,10 +197,13 @@ const Profile: React.FC = () => {
                       <input
                         type="password"
                         id="newPassword"
-                        className="form-input"
+                        className={`form-input ${errors.newPassword ? 'border-red-500' : ''}`}
                         value={formData.newPassword}
                         onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                       />
+                      {errors.newPassword && (
+                        <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>
+                      )}
                     </div>
 
                     <div>
@@ -155,10 +213,13 @@ const Profile: React.FC = () => {
                       <input
                         type="password"
                         id="confirmPassword"
-                        className="form-input"
+                        className={`form-input ${errors.confirmPassword ? 'border-red-500' : ''}`}
                         value={formData.confirmPassword}
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                       />
+                      {errors.confirmPassword && (
+                        <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                      )}
                     </div>
                   </div>
                 </div>
